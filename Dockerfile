@@ -26,4 +26,5 @@ WORKDIR /app
 
 COPY --from=publish /app/publish .
 
+
 ENTRYPOINT ["dotnet", "Api.dll"]
