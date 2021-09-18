@@ -1,17 +1,20 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:5.0 AS build-env
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
 WORKDIR /app
+EXPOSE 80
+EXPOSE 443
 
-COPY *.csproj .
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /src
+COPY ["Api.csproj", "."]
+RUN dotnet restore "./Api.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "Api.csproj" -c Release -o /app/build
 
-RUN dotnet restore
+FROM build AS publish
+RUN dotnet publish "Api.csproj" -c Release -o /app/publish
 
-COPY . ./
-
-RUN dotnet publish --no-restore -c Release -o out
-
-
-FROM mcr.microsoft.com/dotnet/aspnet:5.0
- 
+FROM base AS final
 WORKDIR /app
-COPY --from=build-env /app/out .
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Api.dll"]
